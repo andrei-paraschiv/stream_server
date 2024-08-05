@@ -48,7 +48,7 @@ int main (int argc, char *argv[]) {
             prev_time = curr_time;
         }
         
-        int num_bytes_recv = recvfrom(sockfd, request, REQUEST_SIZE, 0, &cliaddr, sizeof(struct sockaddr_in));
+        int num_bytes_recv = recvfrom(sockfd, request, REQUEST_SIZE, 0, (struct sockaddr *) &cliaddr, NULL);
         // TODO: do work
     }
        
@@ -76,7 +76,7 @@ int init() {
     servaddr.sin_addr.s_addr = INADDR_ANY; 
     servaddr.sin_port = htons(PORT);
 
-    if (bind(sockfd, &servaddr, sizeof(servaddr)) == -1) {
+    if (bind(sockfd, (struct sockaddr *) &servaddr, sizeof(servaddr)) == -1) {
         printf("ERROR: Failed to bind socket with error: %d", errno);
         return 1;
     }
@@ -95,7 +95,7 @@ void *thread_run(void * ptr) {
             if (media_id != 0) {
                 if (fptr[i] == NULL) {
                     char path[strlen(MEDIA_PATH) + REQUEST_SIZE*2];
-                    sprintf(path, "%s%0*x", REQUEST_SIZE*2, MEDIA_PATH, media_id[i]);
+                    sprintf(path, "%s%0*x", MEDIA_PATH, REQUEST_SIZE*2, media_id[i]);
                     fptr[i] = fopen(path, "r");
                 }
                 if (feof(fptr[i])) {
@@ -103,7 +103,7 @@ void *thread_run(void * ptr) {
                     // probably do nothing and explicitly wait for stop signal from client to stop
                 } else {
                     fgets(buffers[i], MTU, fptr[i]);
-                    sendto(sockfd, buffers[i], strlen(buffers[i]), 0, &cliaddrs[i], sizeof(struct sockaddr_in));
+                    sendto(sockfd, buffers[i], strlen(buffers[i]), 0, (struct sockaddr *) &cliaddrs[i], sizeof(struct sockaddr_in));
                 }
             }
         }
